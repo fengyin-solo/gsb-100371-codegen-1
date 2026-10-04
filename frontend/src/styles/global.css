@@ -35,3 +35,33 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+.situation-wall { background: #fff; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+.wall-head { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.wall-title { margin: 0; font-size: 15px; }
+.wall-message { margin: 8px 12px 0; font-size: 13px; color: #067647; }
+.wall-body { display: flex; gap: 12px; padding: 12px; }
+.wall-left { flex: 1; min-width: 0; }
+.wall-right { flex: 1; min-width: 0; border-left: 1px solid var(--border); padding-left: 12px; }
+.wall-subtitle { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.river-group { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; }
+.river-head { display: flex; justify-content: space-between; align-items: baseline; }
+.river-meta { font-size: 12px; color: var(--muted); }
+.river-stations { list-style: none; margin: 6px 0; padding: 0; font-size: 13px; }
+.river-stations li { display: flex; justify-content: space-between; padding: 2px 0; }
+.station-status { color: var(--muted); font-size: 12px; }
+.river-status { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; font-size: 12px; color: var(--muted); }
+.assign-panel { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 8px; }
+.assign-tip { margin: 0 0 6px; font-size: 12px; color: #b42318; }
+.assign-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.assign-name { flex: 1; font-size: 13px; }
+.assign-input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 13px; }
+.wall-list { list-style: none; margin: 0 0 12px; padding: 0; font-size: 13px; }
+.wall-list li { padding: 4px 0; border-bottom: 1px dashed var(--border); }
+.wall-foot { border-top: 1px solid var(--border); padding: 10px 12px; }
+.anomaly-bars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 16px; }
+.anomaly-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.anomaly-name { width: 56px; color: var(--muted); }
+.anomaly-track { flex: 1; height: 8px; background: #eef2f7; border-radius: 4px; overflow: hidden; }
+.anomaly-fill { display: block; height: 8px; background: #b42318; border-radius: 4px; }
+.anomaly-count { width: 36px; text-align: right; color: var(--muted); }
+.snapshot-history { margin-bottom: 12px; }

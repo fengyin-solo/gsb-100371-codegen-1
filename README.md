@@ -61,11 +61,31 @@ npm run build
 | 巡检记录 | `inspection` | 巡检记录 | 记录编号、站点编号、巡检日期 |
 | 测报方案 | `plan` | 测报方案 | 方案编号、方案名称、适用范围 |
 
+## 汛期态势墙
+
+运营概览页中部是汛期态势墙：
+
+- **左栏**按河流聚合站点与遥测/通讯设备在线情况；缺河流归属的站点归入「未归属河流」组，
+  可在组内直接补录河流名（只改「所在河流」字段，其余不动）。历史数据里的占位文本
+  （如「监测站点样例1」）一律视为未归属，不做静默改写。
+- **右栏**列出超警记录（当前水位 > 警戒水位，只认纯数字水位，占位文本不参与判定）和
+  待处理事项（汛期相关模块的待办记录）。
+- **底部**保留各模块异常变化条。
+
+站长（当前值班人）点击「确认态势快照」后，当前态势连同结论一起归档，并同步在巡检记录页
+生成一条「汛期态势核查」待巡检记录。封存只生效一次：内容指纹与最新快照一致时拒绝重复封存。
+快照记录当时的汇总规则版本（`src/data/situation.ts` 的 `RULE_VERSION`），之后调整聚合口径时
+把版本号 +1 即可，已归档快照与历史结论不回溯重算。联动生成的核查记录是封存的产物，
+不再计入待处理事项，避免指纹被自己的产物改变。
+
 ## 约定
 
 - 每个模块的页面在 `frontend/src/views/<模块>/index.vue`，页面只负责渲染，读写统一走
-  `frontend/src/api/local-service.ts`。
+  `frontend/src/api/local-service.ts`；态势墙的读写走 `frontend/src/api/situation-service.ts`。
 - 字段、状态、动作与流转目标集中在 `frontend/src/data/modules.ts`；示例数据在
   `frontend/src/data/seed.ts`。
 - 状态流转只允许在 `local-service.ts` 里改，页面组件不做业务判断。
+- 态势聚合是纯函数，集中在 `frontend/src/data/situation.ts`；快照档案持久化在
+  `localStorage` 的 `hydrology-monitor-station:snapshots`，与业务记录分开，不随模块重置清掉。
 - 想回到初始数据：清掉浏览器里 `hydrology-monitor-station:entries` 这一项，或调用 `resetModule(模块)`。
+- 跑测试：`npm test`（node:test + esbuild 打包，覆盖聚合、幂等封存、归档不可变、河流补录）。
