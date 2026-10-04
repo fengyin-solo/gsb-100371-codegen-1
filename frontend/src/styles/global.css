@@ -35,3 +35,29 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+
+/* 汛期态势墙 */
+.wall { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.wall-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.wall-title { margin: 0 0 4px; font-size: 15px; }
+.wall-desc { margin: 0 0 10px; font-size: 12px; color: var(--muted); }
+.wall-message { margin: 0 0 10px; font-size: 13px; color: #12805c; }
+.wall-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.wall-col h4, .abnormal-bar h4 { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.wall-col .data-table { margin-bottom: 12px; }
+.unassigned-row td { background: #fff7ed; }
+.alert-level { color: #b54708; font-weight: 600; }
+.alert-level.severe { color: #b42318; }
+.backfill { border: 1px dashed #f79009; border-radius: 6px; padding: 8px 10px; }
+.backfill-tip { margin: 0 0 8px; font-size: 12px; color: #b54708; }
+.backfill-item { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.backfill-name { font-size: 13px; white-space: nowrap; }
+.backfill-item input { flex: 1; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; }
+.pending-list { list-style: none; margin: 0; padding: 0; }
+.pending-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eef2f7; font-size: 13px; }
+.abnormal-bar { margin-top: 4px; }
+.abnormal-strip { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: #eef2f7; }
+.abnormal-segment { display: block; height: 100%; }
+.abnormal-legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.snapshot-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #1d4ed8; margin: 0 0 12px; }

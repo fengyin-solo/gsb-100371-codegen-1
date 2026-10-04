@@ -1,6 +1,25 @@
 import { MODULE_BY_KEY } from '@/data/modules'
 import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
-import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
+import { readSnapshots, writeSnapshots } from '@/data/snapshots'
+import {
+  RULE_SUMMARY,
+  RULE_VERSION,
+  buildConclusion,
+  buildSituationWall,
+  currentPeriodKey,
+  formatDate,
+  formatDateTime,
+} from '@/data/situation'
+import type {
+  ActionResult,
+  EntryRow,
+  ModuleMeta,
+  OverviewResult,
+  PageResult,
+  SealResult,
+  SituationSnapshot,
+  SituationWall,
+} from '@/data/types'
 
 // 会写进数据的「往回走」动作：命中就把这条记录标成异常态，看板上能一眼看出来。
 const NEGATIVE_ACTIONS = ['撤销', '作废', '拒绝', '驳回', '停用', '忽略', '下线', '回滚']
@@ -102,4 +121,128 @@ export function loadOverview(): OverviewResult {
     { label: '异常量', value: modules.reduce((sum, item) => sum + item.abnormal, 0) },
   ]
   return { cards, modules }
+}
+
+export function loadSituationWall(): SituationWall {
+  return buildSituationWall(allRows())
+}
+
+export function listSituationSnapshots(): SituationSnapshot[] {
+  return readSnapshots()
+}
+
+/** 封存时同步生成巡检核查：每条超警记录一条核查，每个缺归属站点一条归属核查。 */
+function appendInspections(snapshot: SituationSnapshot, wall: SituationWall): number[] {
+  const rows = listRows('inspection')
+  let nextId = rows.reduce((max, row) => Math.max(max, Number(row.id) || 0), 0)
+  const today = formatDate(new Date())
+  const created: EntryRow[] = []
+
+  for (const alert of wall.alerts) {
+    nextId += 1
+    created.push({
+      id: nextId,
+      status: '待巡检',
+      pending: true,
+      abnormal: false,
+      记录编号: `INSP-${String(nextId).padStart(4, '0')}`,
+      站点编号: alert.stationCode,
+      巡检日期: today,
+      巡检人员: '待指派',
+      检查项目: `态势快照${snapshot.id}·超警核查`,
+      发现问题: `${alert.level}：当前水位${alert.current}m，警戒水位${alert.warning}m`,
+      处理措施: '待现场核查',
+      巡检状态: '待巡检',
+    })
+  }
+  for (const station of wall.unassigned) {
+    nextId += 1
+    created.push({
+      id: nextId,
+      status: '待巡检',
+      pending: true,
+      abnormal: false,
+      记录编号: `INSP-${String(nextId).padStart(4, '0')}`,
+      站点编号: station.code,
+      巡检日期: today,
+      巡检人员: '待指派',
+      检查项目: `态势快照${snapshot.id}·归属核查`,
+      发现问题: `站点「${station.name}」缺少河流归属，需补录`,
+      处理措施: '待现场核查',
+      巡检状态: '待巡检',
+    })
+  }
+
+  if (created.length > 0) {
+    saveRows('inspection', [...rows, ...created])
+  }
+  return created.map((row) => Number(row.id))
+}
+
+let sealing = false
+
+/**
+ * 站长确认封存态势快照。同一天同一班次只生效一次：
+ * 函数内直读 localStorage 判重，重复点击、并发调用、另一个标签页已封存，都返回已存在的那份。
+ */
+export function sealSituationSnapshot(operator: string): SealResult {
+  if (sealing) {
+    return { ok: false, created: false, message: '快照封存进行中，请勿重复提交' }
+  }
+  sealing = true
+  try {
+    const now = new Date()
+    const periodKey = currentPeriodKey(now)
+    const snapshots = readSnapshots()
+    const existing = snapshots.find((item) => item.periodKey === periodKey)
+    if (existing) {
+      return {
+        ok: true,
+        created: false,
+        snapshot: existing,
+        message: `本期（${periodKey}）快照 ${existing.id} 已封存，重复确认不再生效`,
+      }
+    }
+
+    const wall = buildSituationWall(allRows())
+    const seq = snapshots.filter((item) => item.periodKey.startsWith(formatDate(now))).length + 1
+    const snapshot: SituationSnapshot = {
+      id: `SNAP-${formatDate(now).replace(/-/g, '')}-${String(seq).padStart(2, '0')}`,
+      periodKey,
+      sealedAt: formatDateTime(now),
+      operator,
+      ruleVersion: RULE_VERSION,
+      ruleSummary: RULE_SUMMARY,
+      conclusion: buildConclusion(wall),
+      wall,
+      inspectionIds: [],
+    }
+    snapshot.inspectionIds = appendInspections(snapshot, wall)
+    writeSnapshots([snapshot, ...snapshots])
+    return {
+      ok: true,
+      created: true,
+      snapshot,
+      message: `态势快照 ${snapshot.id} 已封存，同步生成 ${snapshot.inspectionIds.length} 条巡检核查`,
+    }
+  } finally {
+    sealing = false
+  }
+}
+
+/** 缺河流归属的存量站走人工补录：不自动猜测，补录后持久化并参与下一次汇总。 */
+export function assignStationRiver(id: number, river: string): ActionResult {
+  const name = river.trim()
+  if (!name) {
+    return { ok: false, message: '河流名称不能为空' }
+  }
+  const rows = listRows('station')
+  const index = rows.findIndex((row) => Number(row.id) === id)
+  if (index < 0) {
+    return { ok: false, message: `没有找到编号为 ${id} 的水文监测站` }
+  }
+  const next = [...rows]
+  next[index] = { ...rows[index], 所在河流: name }
+  saveRows('station', next)
+  return { ok: true, message: `已为 ${String(next[index]['站点编号'])} 补录河流归属「${name}」` }
 }

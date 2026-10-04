@@ -18,6 +18,11 @@
       </article>
     </div>
 
+    <p v-if="latestSnapshot" class="snapshot-banner">
+      态势快照 {{ latestSnapshot.id }}（{{ latestSnapshot.sealedAt }} · {{ latestSnapshot.operator }}）已同步生成
+      {{ latestSnapshot.inspectionIds.length }} 条核查记录，按快照结论执行：{{ latestSnapshot.conclusion }}
+    </p>
+
     <p class="status-legend">
       <span v-for="item in statusSummary" :key="item.status" class="legend-item">
         {{ item.status }}：{{ item.count }}
@@ -76,10 +81,11 @@ import { computed, onMounted, ref } from 'vue'
 import {
   downloadEntries,
   listEntries,
+  listSituationSnapshots,
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
-import type { EntryRow } from '@/data/types'
+import type { EntryRow, SituationSnapshot } from '@/data/types'
 
 const meta = moduleMeta('inspection')
 const columns = ["记录编号", "站点编号", "巡检日期", "巡检人员", "检查项目", "发现问题", "处理措施", "巡检状态"]
@@ -91,6 +97,7 @@ const rows = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
+const latestSnapshot = ref<SituationSnapshot | null>(null)
 const filterFields = columns.slice(0, 3)
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
@@ -128,6 +135,7 @@ function reload() {
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    latestSnapshot.value = listSituationSnapshots()[0] ?? null
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '巡检记录列表读取失败'
   }
